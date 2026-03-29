@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Daily Brief"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Daily Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;
+  --border:rgba(255,255,255,0.07);--text:#f0ece4;--muted:#6b6760;
+  --accent:#e8d5a3;--accent2:#a89878;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column}
+
+.header{padding:calc(var(--safe-top)+16px) 20px 0;flex-shrink:0;background:var(--bg)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.app-title{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-0.5px}
+.app-title span{color:var(--accent);font-style:italic}
+.date-chip{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;padding-top:4px}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4caf88;margin-right:5px;animation:blink 2s ease-in-out infinite;vertical-align:middle;margin-bottom:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.progress-wrap{margin-bottom:16px}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:6px}
+.progress-label span{font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;font-family:'DM Mono',monospace}
+.pbar{height:2px;background:var(--surface2);border-radius:1px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:1px;transition:width 1s ease}
+
+.tabs-scroll{overflow-x:auto;display:flex;gap:8px;padding-bottom:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs-scroll::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;font-size:11px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:'Syne',sans-serif}
+.tab.on{background:var(--accent);color:#0a0a0a;border-color:var(--accent);font-weight:700}
+
+.scroll-area{flex:1;overflow-y:auto;padding:4px 20px calc(var(--safe-bot)+80px);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll-area::-webkit-scrollbar{display:none}
+.panel{display:none;animation:fadeUp 0.3s ease}
+.panel.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SOURCES BAR */
+.sources-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:2px}
+.source-chip{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:2px 8px;letter-spacing:0.3px}
+
+/* STORY CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:10px;position:relative;overflow:hidden;text-decoration:none;display:block;cursor:pointer;transition:border-color 0.2s}
+.card:active{border-color:rgba(232,213,163,0.25)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;flex-shrink:0}
+.card-age{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.3px}
+.card-source{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.3px;text-align:right}
+.headline{font-family:'DM Serif Display',serif;font-size:17px;line-height:1.35;color:var(--text);margin-bottom:8px;letter-spacing:-0.2px}
+.summary{font-size:13px;line-height:1.65;color:var(--muted);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.read-more{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;letter-spacing:0.3px}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;padding:12px 20px calc(var(--safe-bot)+12px);background:linear-gradient(transparent,var(--bg) 30%);display:flex;justify-content:center;pointer-events:none;z-index:10}
+.refresh-btn{pointer-events:all;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;font-family:'Syne',sans-serif;font-weight:500;letter-spacing:0.5px;padding:12px 28px;border-radius:30px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.refresh-btn:disabled{opacity:0.4;cursor:default}
+.refresh-btn:not(:disabled):active{transform:scale(0.97)}
+.spin{display:inline-block}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.spinning{animation:rotate 1s linear infinite}
+
+/* LOADING */
+.loading{padding:40px 0;text-align:center}
+.loading-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}
+.loading-dot:nth-child(2){animation-delay:0.2s}
+.loading-dot:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+.loading p{font-size:12px;color:var(--muted);margin-top:12px;font-family:'DM Mono',monospace;letter-spacing:0.5px}
+
+.empty{padding:40px 20px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8}
+.empty strong{color:var(--text);display:block;margin-bottom:8px;font-size:15px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="app-title">Daily <span>Brief</span></div>
+      <div class="date-chip" id="dateLabel"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding-top:6px">
+      <span class="live-dot"></span>
+      <span style="font-size:10px;color:#4caf88;font-family:'DM Mono',monospace;letter-spacing:0.5px">LIVE</span>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>8-month arc</span>
+      <span id="progressPct"></span>
+    </div>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  </div>
+  <div class="tabs-scroll" id="tabs"></div>
+</div>
+
+<div class="scroll-area" id="scrollArea">
+  <div id="panels"></div>
+</div>
+
+<div class="bottom-nav">
+  <button class="refresh-btn" id="refreshBtn" onclick="refresh()">
+    <span class="spin" id="spinIcon">↻</span> Refresh
+  </button>
+</div>
+
+<script>
+// RSS2JSON proxy — free, no key needed, fetches any RSS feed and returns JSON
+const PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const COUNT = 8; // stories per tab
+
+const TOPICS = [
+  {
+    id: 'ai',
+    label: 'AI',
+    tag: '#E6F1FB', tagColor: '#185FA5',
+    feeds: [
+      { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', name: 'The Verge' },
+      { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', name: 'TechCrunch' },
+      { url: 'https://www.anthropic.com/rss.xml', name: 'Anthropic' },
+    ]
+  },
+  {
+    id: 'design',
+    label: 'Design',
+    tag: '#EEEDFE', tagColor: '#534AB7',
+    feeds: [
+      { url: 'https://www.itsnicethat.com/rss', name: "It's Nice That" },
+      { url: 'https://www.creativebloq.com/feeds/all', name: 'Creative Bloq' },
+      { url: 'https://www.dezeen.com/feed/', name: 'Dezeen' },
+    ]
+  },
+  {
+    id: 'strategy',
+    label: 'Strategy',
+    tag: '#E1F5EE', tagColor: '#0F6E56',
+    feeds: [
+      { url: 'https://hbr.org/resources/rss/hbr_rss.xml', name: 'HBR' },
+      { url: 'https://www.strategy-business.com/rss/latest', name: 'Strategy+Business' },
+      { url: 'https://techcrunch.com/category/startups/feed/', name: 'TechCrunch Startups' },
+    ]
+  },
+  {
+    id: 'geo',
+    label: 'Geo',
+    tag: '#FAECE7', tagColor: '#993C1D',
+    feeds: [
+      { url: 'https://www.thehindu.com/news/international/?service=rss', name: 'The Hindu' },
+      { url: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', name: 'BBC India' },
+      { url: 'https://feeds.reuters.com/Reuters/INdiaNews', name: 'Reuters India' },
+    ]
+  },
+  {
+    id: 'invest',
+    label: 'Invest',
+    tag: '#FAEEDA', tagColor: '#854F0B',
+    feeds: [
+      { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms', name: 'ET Markets' },
+      { url: 'https://www.moneycontrol.com/rss/business.xml', name: 'Moneycontrol' },
+      { url: 'https://feeds.feedburner.com/ndtvprofit-latest', name: 'NDTV Profit' },
+    ]
+  },
+  {
+    id: 'vc',
+    label: 'Startups/VC',
+    tag: '#FBEAF0', tagColor: '#993556',
+    feeds: [
+      { url: 'https://inc42.com/feed/', name: 'Inc42' },
+      { url: 'https://yourstory.com/feed', name: 'YourStory' },
+      { url: 'https://entrackr.com/feed/', name: 'Entrackr' },
+    ]
+  },
+];
+
+const cache = {};
+let activeTab = 'ai';
+
+// Date + progress
+const now = new Date();
+document.getElementById('dateLabel').textContent =
+  now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+const start = new Date('2026-03-29'), end = new Date('2026-11-29');
+const pct = Math.min(100, Math.max(1, Math.round(((now-start)/(end-start))*100)));
+const monthNum = Math.max(1, Math.min(8, Math.ceil(((now-start)/(end-start))*8)));
+document.getElementById('pfill').style.width = pct + '%';
+document.getElementById('progressPct').textContent = `Month ${monthNum} of 8`;
+
+// Build tabs + panels
+TOPICS.forEach((t, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (i===0?' on':'');
+  btn.textContent = t.label;
+  btn.dataset.id = t.id;
+  btn.onclick = () => switchTab(t.id);
+  document.getElementById('tabs').appendChild(btn);
+
+  const panel = document.createElement('div');
+  panel.className = 'panel' + (i===0?' on':'');
+  panel.id = 'panel-' + t.id;
+  document.getElementById('panels').appendChild(panel);
+});
+
+// Load first tab
+loadTopic('ai');
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.id===id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id==='panel-'+id));
+  document.getElementById('scrollArea').scrollTop = 0;
+  if (!cache[id]) loadTopic(id);
+}
+
+async function fetchFeed(feedUrl, sourceName) {
+  const url = PROXY + encodeURIComponent(feedUrl) + '&count=' + COUNT;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('fetch failed');
+  const data = await res.json();
+  if (data.status !== 'ok') throw new Error('feed error');
+  return (data.items || []).map(item => ({
+    title: item.title || '',
+    description: stripHtml(item.description || item.content || ''),
+    link: item.link || item.url || '',
+    pubDate: item.pubDate || '',
+    source: sourceName,
+  }));
+}
+
+function stripHtml(html) {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ')
+    .replace(/\s+/g,' ').trim()
+    .slice(0, 200);
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const mins = Math.floor((now - d) / 60000);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+async function loadTopic(id) {
+  const topic = TOPICS.find(t=>t.id===id);
+  const panel = document.getElementById('panel-'+id);
+
+  panel.innerHTML = `<div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span><p>Fetching live stories...</p></div>`;
+  setRefreshState(true);
+
+  try {
+    // Fetch all feeds in parallel
+    const results = await Promise.allSettled(
+      topic.feeds.map(f => fetchFeed(f.url, f.name))
+    );
+
+    // Merge successful results
+    let items = [];
+    results.forEach(r => {
+      if (r.status === 'fulfilled') items = items.concat(r.value);
+    });
+
+    if (!items.length) throw new Error('No stories loaded from any source');
+
+    // Sort by date (newest first), deduplicate by title similarity
+    items.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+    const seen = new Set();
+    items = items.filter(item => {
+      const key = item.title.slice(0,40).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Cap at top 12
+    items = items.slice(0, 12);
+    cache[id] = items;
+    renderStories(panel, items, topic);
+  } catch(e) {
+    panel.innerHTML = `<div class="empty"><strong>Couldn't load stories</strong>Check your connection and hit Refresh.</div>`;
+  } finally {
+    setRefreshState(false);
+  }
+}
+
+function renderStories(panel, items, topic) {
+  if (!items.length) {
+    panel.innerHTML = `<div class="empty">No stories right now. Try refreshing.</div>`;
+    return;
+  }
+
+  const sourceNames = [...new Set(items.map(i=>i.source))];
+  const sourcesBar = `<div class="sources-bar">${sourceNames.map(s=>`<span class="source-chip">${s}</span>`).join('')}</div>`;
+
+  const cards = items.map(item => `
+    <a class="card" href="${item.link}" target="_blank" rel="noopener">
+      <div class="card-meta">
+        <span class="tag" style="background:${topic.tag};color:${topic.tagColor}">${item.source}</span>
+        <span class="card-age">${timeAgo(item.pubDate)}</span>
+      </div>
+      <div class="headline">${item.title}</div>
+      ${item.description ? `<div class="summary">${item.description}</div>` : ''}
+      <div class="read-more">Read full story →</div>
+    </a>
+  `).join('');
+
+  panel.innerHTML = sourcesBar + cards;
+}
+
+function refresh() {
+  delete cache[activeTab];
+  loadTopic(activeTab);
+}
+
+function setRefreshState(on) {
+  document.getElementById('refreshBtn').disabled = on;
+  document.getElementById('spinIcon').classList.toggle('spinning', on);
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
