@@ -29,8 +29,10 @@ body{display:flex;flex-direction:column}
 .app-title{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-0.5px}
 .app-title span{color:var(--accent);font-style:italic}
 .date-chip{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;padding-top:4px}
-.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4caf88;margin-right:5px;animation:blink 2s ease-in-out infinite;vertical-align:middle;margin-bottom:1px}
+.live-badge{display:flex;align-items:center;gap:5px;padding-top:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4caf88;animation:blink 2s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.live-text{font-size:10px;color:#4caf88;font-family:'DM Mono',monospace;letter-spacing:0.5px}
 
 .progress-wrap{margin-bottom:16px}
 .progress-label{display:flex;justify-content:space-between;margin-bottom:6px}
@@ -49,23 +51,19 @@ body{display:flex;flex-direction:column}
 .panel.on{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* SOURCES BAR */
-.sources-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:2px}
-.source-chip{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:2px 8px;letter-spacing:0.3px}
+.sources-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.source-chip{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:2px 8px}
 
-/* STORY CARD */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:10px;position:relative;overflow:hidden;text-decoration:none;display:block;cursor:pointer;transition:border-color 0.2s}
-.card:active{border-color:rgba(232,213,163,0.25)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:10px;position:relative;overflow:hidden;text-decoration:none;display:block;transition:border-color 0.2s}
+.card:active{border-color:rgba(232,213,163,0.3)}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
 .card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;flex-shrink:0}
-.card-age{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.3px}
-.card-source{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.3px;text-align:right}
-.headline{font-family:'DM Serif Display',serif;font-size:17px;line-height:1.35;color:var(--text);margin-bottom:8px;letter-spacing:-0.2px}
+.tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace}
+.card-age{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.headline{font-family:'DM Serif Display',serif;font-size:17px;line-height:1.35;color:var(--text);margin-bottom:8px}
 .summary{font-size:13px;line-height:1.65;color:var(--muted);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.read-more{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;letter-spacing:0.3px}
+.read-more{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace}
 
-/* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;padding:12px 20px calc(var(--safe-bot)+12px);background:linear-gradient(transparent,var(--bg) 30%);display:flex;justify-content:center;pointer-events:none;z-index:10}
 .refresh-btn{pointer-events:all;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;font-family:'Syne',sans-serif;font-weight:500;letter-spacing:0.5px;padding:12px 28px;border-radius:30px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
 .refresh-btn:disabled{opacity:0.4;cursor:default}
@@ -74,7 +72,6 @@ body{display:flex;flex-direction:column}
 @keyframes rotate{to{transform:rotate(360deg)}}
 .spinning{animation:rotate 1s linear infinite}
 
-/* LOADING */
 .loading{padding:40px 0;text-align:center}
 .loading-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}
 .loading-dot:nth-child(2){animation-delay:0.2s}
@@ -84,6 +81,7 @@ body{display:flex;flex-direction:column}
 
 .empty{padding:40px 20px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8}
 .empty strong{color:var(--text);display:block;margin-bottom:8px;font-size:15px}
+.empty a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
@@ -94,9 +92,9 @@ body{display:flex;flex-direction:column}
       <div class="app-title">Daily <span>Brief</span></div>
       <div class="date-chip" id="dateLabel"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;padding-top:6px">
+    <div class="live-badge">
       <span class="live-dot"></span>
-      <span style="font-size:10px;color:#4caf88;font-family:'DM Mono',monospace;letter-spacing:0.5px">LIVE</span>
+      <span class="live-text">LIVE</span>
     </div>
   </div>
   <div class="progress-wrap">
@@ -120,78 +118,157 @@ body{display:flex;flex-direction:column}
 </div>
 
 <script>
-// RSS2JSON proxy — free, no key needed, fetches any RSS feed and returns JSON
-const PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
-const COUNT = 8; // stories per tab
+const now = new Date();
 
 const TOPICS = [
   {
-    id: 'ai',
-    label: 'AI',
-    tag: '#E6F1FB', tagColor: '#185FA5',
-    feeds: [
-      { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', name: 'The Verge' },
-      { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', name: 'TechCrunch' },
-      { url: 'https://www.anthropic.com/rss.xml', name: 'Anthropic' },
+    id:'ai', label:'AI', tag:'#E6F1FB', tagColor:'#185FA5',
+    feeds:[
+      {url:'https://techcrunch.com/category/artificial-intelligence/feed/', name:'TechCrunch AI'},
+      {url:'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', name:'The Verge AI'},
+      {url:'https://feeds.feedburner.com/venturebeat/SZYF', name:'VentureBeat'},
     ]
   },
   {
-    id: 'design',
-    label: 'Design',
-    tag: '#EEEDFE', tagColor: '#534AB7',
-    feeds: [
-      { url: 'https://www.itsnicethat.com/rss', name: "It's Nice That" },
-      { url: 'https://www.creativebloq.com/feeds/all', name: 'Creative Bloq' },
-      { url: 'https://www.dezeen.com/feed/', name: 'Dezeen' },
+    id:'design', label:'Design', tag:'#EEEDFE', tagColor:'#534AB7',
+    feeds:[
+      {url:'https://www.creativebloq.com/feeds/all', name:'Creative Bloq'},
+      {url:'https://www.dezeen.com/feed/', name:'Dezeen'},
+      {url:'https://www.itsnicethat.com/rss', name:"It's Nice That"},
     ]
   },
   {
-    id: 'strategy',
-    label: 'Strategy',
-    tag: '#E1F5EE', tagColor: '#0F6E56',
-    feeds: [
-      { url: 'https://hbr.org/resources/rss/hbr_rss.xml', name: 'HBR' },
-      { url: 'https://www.strategy-business.com/rss/latest', name: 'Strategy+Business' },
-      { url: 'https://techcrunch.com/category/startups/feed/', name: 'TechCrunch Startups' },
+    id:'strategy', label:'Strategy', tag:'#E1F5EE', tagColor:'#0F6E56',
+    feeds:[
+      {url:'https://hbr.org/resources/rss/hbr_rss.xml', name:'HBR'},
+      {url:'https://feeds.feedburner.com/fastcompany/headlines', name:'Fast Company'},
+      {url:'https://www.strategy-business.com/rss/latest', name:'Strategy+Business'},
     ]
   },
   {
-    id: 'geo',
-    label: 'Geo',
-    tag: '#FAECE7', tagColor: '#993C1D',
-    feeds: [
-      { url: 'https://www.thehindu.com/news/international/?service=rss', name: 'The Hindu' },
-      { url: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', name: 'BBC India' },
-      { url: 'https://feeds.reuters.com/Reuters/INdiaNews', name: 'Reuters India' },
+    id:'geo', label:'Geo', tag:'#FAECE7', tagColor:'#993C1D',
+    feeds:[
+      {url:'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', name:'BBC India'},
+      {url:'https://www.thehindu.com/news/international/?service=rss', name:'The Hindu'},
+      {url:'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', name:'Times of India'},
     ]
   },
   {
-    id: 'invest',
-    label: 'Invest',
-    tag: '#FAEEDA', tagColor: '#854F0B',
-    feeds: [
-      { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms', name: 'ET Markets' },
-      { url: 'https://www.moneycontrol.com/rss/business.xml', name: 'Moneycontrol' },
-      { url: 'https://feeds.feedburner.com/ndtvprofit-latest', name: 'NDTV Profit' },
+    id:'invest', label:'Invest', tag:'#FAEEDA', tagColor:'#854F0B',
+    feeds:[
+      {url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms', name:'ET Markets'},
+      {url:'https://www.moneycontrol.com/rss/business.xml', name:'Moneycontrol'},
+      {url:'https://www.livemint.com/rss/markets', name:'Mint Markets'},
     ]
   },
   {
-    id: 'vc',
-    label: 'Startups/VC',
-    tag: '#FBEAF0', tagColor: '#993556',
-    feeds: [
-      { url: 'https://inc42.com/feed/', name: 'Inc42' },
-      { url: 'https://yourstory.com/feed', name: 'YourStory' },
-      { url: 'https://entrackr.com/feed/', name: 'Entrackr' },
+    id:'vc', label:'Startups/VC', tag:'#FBEAF0', tagColor:'#993556',
+    feeds:[
+      {url:'https://inc42.com/feed/', name:'Inc42'},
+      {url:'https://yourstory.com/feed', name:'YourStory'},
+      {url:'https://entrackr.com/feed/', name:'Entrackr'},
     ]
   },
 ];
+
+// Multiple proxy strategies — tries each until one works
+async function fetchWithProxies(feedUrl, sourceName) {
+  const proxies = [
+    // Strategy 1: rss2json
+    async () => {
+      const r = await fetch(
+        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=8`,
+        {signal: AbortSignal.timeout(6000)}
+      );
+      const d = await r.json();
+      if (d.status !== 'ok' || !d.items?.length) throw new Error('empty');
+      return d.items.map(i => ({
+        title: i.title || '',
+        description: clean(i.description || i.content || ''),
+        link: i.link || '',
+        pubDate: i.pubDate || '',
+        source: sourceName,
+      }));
+    },
+    // Strategy 2: allorigins (returns raw XML, we parse it)
+    async () => {
+      const r = await fetch(
+        `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`,
+        {signal: AbortSignal.timeout(8000)}
+      );
+      const d = await r.json();
+      if (!d.contents) throw new Error('empty');
+      return parseXML(d.contents, sourceName);
+    },
+    // Strategy 3: corsproxy.io
+    async () => {
+      const r = await fetch(
+        `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
+        {signal: AbortSignal.timeout(8000)}
+      );
+      const text = await r.text();
+      return parseXML(text, sourceName);
+    },
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      const items = await proxy();
+      if (items && items.length) return items;
+    } catch(e) {
+      // try next proxy
+    }
+  }
+  return []; // all proxies failed for this feed
+}
+
+function parseXML(xmlText, sourceName) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  const items = [...doc.querySelectorAll('item, entry')];
+  return items.slice(0, 8).map(item => {
+    const get = (tags) => {
+      for (const tag of tags) {
+        const el = item.querySelector(tag);
+        if (el) return el.textContent?.trim() || '';
+      }
+      return '';
+    };
+    return {
+      title: get(['title']),
+      description: clean(get(['description','summary','content'])),
+      link: get(['link']) || item.querySelector('link')?.getAttribute('href') || '',
+      pubDate: get(['pubDate','published','updated']),
+      source: sourceName,
+    };
+  }).filter(i => i.title);
+}
+
+function clean(html) {
+  return html
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ')
+    .replace(/\s+/g,' ').trim()
+    .slice(0, 220);
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const mins = Math.floor((now - d) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs/24) + 'd ago';
+}
 
 const cache = {};
 let activeTab = 'ai';
 
 // Date + progress
-const now = new Date();
 document.getElementById('dateLabel').textContent =
   now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 const start = new Date('2026-03-29'), end = new Date('2026-11-29');
@@ -203,19 +280,18 @@ document.getElementById('progressPct').textContent = `Month ${monthNum} of 8`;
 // Build tabs + panels
 TOPICS.forEach((t, i) => {
   const btn = document.createElement('button');
-  btn.className = 'tab' + (i===0?' on':'');
+  btn.className = 'tab'+(i===0?' on':'');
   btn.textContent = t.label;
   btn.dataset.id = t.id;
   btn.onclick = () => switchTab(t.id);
   document.getElementById('tabs').appendChild(btn);
 
   const panel = document.createElement('div');
-  panel.className = 'panel' + (i===0?' on':'');
-  panel.id = 'panel-' + t.id;
+  panel.className = 'panel'+(i===0?' on':'');
+  panel.id = 'panel-'+t.id;
   document.getElementById('panels').appendChild(panel);
 });
 
-// Load first tab
 loadTopic('ai');
 
 function switchTab(id) {
@@ -226,78 +302,37 @@ function switchTab(id) {
   if (!cache[id]) loadTopic(id);
 }
 
-async function fetchFeed(feedUrl, sourceName) {
-  const url = PROXY + encodeURIComponent(feedUrl) + '&count=' + COUNT;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('fetch failed');
-  const data = await res.json();
-  if (data.status !== 'ok') throw new Error('feed error');
-  return (data.items || []).map(item => ({
-    title: item.title || '',
-    description: stripHtml(item.description || item.content || ''),
-    link: item.link || item.url || '',
-    pubDate: item.pubDate || '',
-    source: sourceName,
-  }));
-}
-
-function stripHtml(html) {
-  return html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ')
-    .replace(/\s+/g,' ').trim()
-    .slice(0, 200);
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d)) return '';
-  const mins = Math.floor((now - d) / 60000);
-  if (mins < 60) return mins + 'm ago';
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return hrs + 'h ago';
-  const days = Math.floor(hrs / 24);
-  return days + 'd ago';
-}
-
 async function loadTopic(id) {
   const topic = TOPICS.find(t=>t.id===id);
   const panel = document.getElementById('panel-'+id);
-
   panel.innerHTML = `<div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span><p>Fetching live stories...</p></div>`;
   setRefreshState(true);
 
   try {
     // Fetch all feeds in parallel
-    const results = await Promise.allSettled(
-      topic.feeds.map(f => fetchFeed(f.url, f.name))
-    );
-
-    // Merge successful results
+    const results = await Promise.allSettled(topic.feeds.map(f => fetchWithProxies(f.url, f.name)));
     let items = [];
-    results.forEach(r => {
-      if (r.status === 'fulfilled') items = items.concat(r.value);
-    });
+    results.forEach(r => { if (r.status==='fulfilled') items = items.concat(r.value); });
 
-    if (!items.length) throw new Error('No stories loaded from any source');
+    if (!items.length) throw new Error('no_stories');
 
-    // Sort by date (newest first), deduplicate by title similarity
-    items.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+    // Sort newest first, dedupe
+    items.sort((a,b) => new Date(b.pubDate)-new Date(a.pubDate));
     const seen = new Set();
     items = items.filter(item => {
-      const key = item.title.slice(0,40).toLowerCase();
+      const key = item.title.slice(0,50).toLowerCase().replace(/\s+/g,'');
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    });
+    }).slice(0, 12);
 
-    // Cap at top 12
-    items = items.slice(0, 12);
     cache[id] = items;
     renderStories(panel, items, topic);
   } catch(e) {
-    panel.innerHTML = `<div class="empty"><strong>Couldn't load stories</strong>Check your connection and hit Refresh.</div>`;
+    const sources = topic.feeds.map(f =>
+      `<a href="${f.url.replace('/feed','').replace('/rss','')}" target="_blank" rel="noopener" style="color:var(--accent)">${f.name}</a>`
+    ).join(', ');
+    panel.innerHTML = `<div class="empty"><strong>Couldn't load stories</strong>Proxy may be temporarily down. Try refreshing, or visit sources directly:<br><br>${sources}</div>`;
   } finally {
     setRefreshState(false);
   }
@@ -305,13 +340,11 @@ async function loadTopic(id) {
 
 function renderStories(panel, items, topic) {
   if (!items.length) {
-    panel.innerHTML = `<div class="empty">No stories right now. Try refreshing.</div>`;
+    panel.innerHTML = `<div class="empty">No stories right now. Hit Refresh.</div>`;
     return;
   }
-
   const sourceNames = [...new Set(items.map(i=>i.source))];
-  const sourcesBar = `<div class="sources-bar">${sourceNames.map(s=>`<span class="source-chip">${s}</span>`).join('')}</div>`;
-
+  const bar = `<div class="sources-bar">${sourceNames.map(s=>`<span class="source-chip">${s}</span>`).join('')}</div>`;
   const cards = items.map(item => `
     <a class="card" href="${item.link}" target="_blank" rel="noopener">
       <div class="card-meta">
@@ -319,12 +352,11 @@ function renderStories(panel, items, topic) {
         <span class="card-age">${timeAgo(item.pubDate)}</span>
       </div>
       <div class="headline">${item.title}</div>
-      ${item.description ? `<div class="summary">${item.description}</div>` : ''}
+      ${item.description?`<div class="summary">${item.description}</div>`:''}
       <div class="read-more">Read full story →</div>
     </a>
   `).join('');
-
-  panel.innerHTML = sourcesBar + cards;
+  panel.innerHTML = bar + cards;
 }
 
 function refresh() {
