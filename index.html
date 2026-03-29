@@ -81,7 +81,6 @@ body{display:flex;flex-direction:column}
 
 .empty{padding:40px 20px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8}
 .empty strong{color:var(--text);display:block;margin-bottom:8px;font-size:15px}
-.empty a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
@@ -171,86 +170,15 @@ const TOPICS = [
   },
 ];
 
-// Multiple proxy strategies — tries each until one works
-async function fetchWithProxies(feedUrl, sourceName) {
-  const proxies = [
-    // Strategy 1: rss2json
-    async () => {
-      const r = await fetch(
-        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=8`,
-        {signal: AbortSignal.timeout(6000)}
-      );
-      const d = await r.json();
-      if (d.status !== 'ok' || !d.items?.length) throw new Error('empty');
-      return d.items.map(i => ({
-        title: i.title || '',
-        description: clean(i.description || i.content || ''),
-        link: i.link || '',
-        pubDate: i.pubDate || '',
-        source: sourceName,
-      }));
-    },
-    // Strategy 2: allorigins (returns raw XML, we parse it)
-    async () => {
-      const r = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`,
-        {signal: AbortSignal.timeout(8000)}
-      );
-      const d = await r.json();
-      if (!d.contents) throw new Error('empty');
-      return parseXML(d.contents, sourceName);
-    },
-    // Strategy 3: corsproxy.io
-    async () => {
-      const r = await fetch(
-        `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
-        {signal: AbortSignal.timeout(8000)}
-      );
-      const text = await r.text();
-      return parseXML(text, sourceName);
-    },
-  ];
-
-  for (const proxy of proxies) {
-    try {
-      const items = await proxy();
-      if (items && items.length) return items;
-    } catch(e) {
-      // try next proxy
-    }
-  }
-  return []; // all proxies failed for this feed
-}
-
-function parseXML(xmlText, sourceName) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, 'text/xml');
-  const items = [...doc.querySelectorAll('item, entry')];
-  return items.slice(0, 8).map(item => {
-    const get = (tags) => {
-      for (const tag of tags) {
-        const el = item.querySelector(tag);
-        if (el) return el.textContent?.trim() || '';
-      }
-      return '';
-    };
-    return {
-      title: get(['title']),
-      description: clean(get(['description','summary','content'])),
-      link: get(['link']) || item.querySelector('link')?.getAttribute('href') || '',
-      pubDate: get(['pubDate','published','updated']),
-      source: sourceName,
-    };
-  }).filter(i => i.title);
-}
-
-function clean(html) {
-  return html
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ')
-    .replace(/\s+/g,' ').trim()
-    .slice(0, 220);
+// Calls our own Vercel serverless function — no CORS, always works
+async function fetchFeed(feedUrl, sourceName) {
+  const res = await fetch(`/api/rss?url=${encodeURIComponent(feedUrl)}`, {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = await res.json();
+  if (!data.items?.length) throw new Error('empty');
+  return data.items.map(i => ({ ...i, source: sourceName }));
 }
 
 function timeAgo(dateStr) {
@@ -262,7 +190,7 @@ function timeAgo(dateStr) {
   if (mins < 60) return mins + 'm ago';
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return hrs + 'h ago';
-  return Math.floor(hrs/24) + 'd ago';
+  return Math.floor(hrs / 24) + 'd ago';
 }
 
 const cache = {};
@@ -309,14 +237,13 @@ async function loadTopic(id) {
   setRefreshState(true);
 
   try {
-    // Fetch all feeds in parallel
-    const results = await Promise.allSettled(topic.feeds.map(f => fetchWithProxies(f.url, f.name)));
+    const results = await Promise.allSettled(topic.feeds.map(f => fetchFeed(f.url, f.name)));
     let items = [];
     results.forEach(r => { if (r.status==='fulfilled') items = items.concat(r.value); });
 
     if (!items.length) throw new Error('no_stories');
 
-    // Sort newest first, dedupe
+    // Sort newest first, dedupe by title
     items.sort((a,b) => new Date(b.pubDate)-new Date(a.pubDate));
     const seen = new Set();
     items = items.filter(item => {
@@ -329,10 +256,7 @@ async function loadTopic(id) {
     cache[id] = items;
     renderStories(panel, items, topic);
   } catch(e) {
-    const sources = topic.feeds.map(f =>
-      `<a href="${f.url.replace('/feed','').replace('/rss','')}" target="_blank" rel="noopener" style="color:var(--accent)">${f.name}</a>`
-    ).join(', ');
-    panel.innerHTML = `<div class="empty"><strong>Couldn't load stories</strong>Proxy may be temporarily down. Try refreshing, or visit sources directly:<br><br>${sources}</div>`;
+    panel.innerHTML = `<div class="empty"><strong>Couldn't load stories</strong>Check your connection and hit Refresh.</div>`;
   } finally {
     setRefreshState(false);
   }
